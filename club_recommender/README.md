@@ -16,10 +16,10 @@ For the API docs:
 
 ## Data
 
-Put your real club CSV at:
+The recommender loads the supplied club database from the project root:
 
 ```text
-data/clubs.csv
+UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv
 ```
 
 The recommender supports the fields from the club schema discussed in the project:
@@ -49,7 +49,7 @@ The recommender supports the fields from the club schema discussed in the projec
 - meeting_days
 - and related metadata
 
-The app also works without `data/clubs.csv` by using a small demo dataset.
+If that CSV is missing, the app falls back to a small demo dataset.
 
 ## Architecture
 
@@ -86,4 +86,4 @@ The FastAPI app serves the frontend and API from the same domain. Vercel uses `i
 
 Alternatively, choose **Add New → Project** in the Vercel dashboard, import the repository, and set **Root Directory** to `club_recommender` before deploying. Each later push to the connected branch will redeploy the site.
 
-Vercel deployments use the demo club data unless `data/clubs.csv` is included in the project before deployment.
+The supplied CSV is included in this project, so Vercel will load its club data after deployment.

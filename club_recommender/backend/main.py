@@ -12,7 +12,7 @@ from .profile import profile_from_answers
 from .recommender import recommend
 
 ROOT = Path(__file__).resolve().parent.parent
-DATA = ROOT / "data" / "clubs.csv"
+DATA = ROOT / "UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv"
 
 DEMO = pd.DataFrame([
     {"club_id":"demo1","club_name":"Cornell Robotics Club","category":"Tech & Making","subcategory":"Gadgets & Computing","summary":"Build robots and work on hands-on engineering projects.","interest_tags":"robotics,engineering,computing","skills_gained":"programming,hardware","vibe_social":0.7,"vibe_competitive":0.8,"vibe_creative":0.7,"vibe_relaxed":0.2,"vibe_physical":0.5,"vibe_intellectual":0.9,"vibe_performance":0.1,"vibe_service":0.2,"beginner_friendly":True,"hours_per_week_min":2,"hours_per_week_max":6,"size_bucket":"large","meeting_days":"tuesday,thursday"},
