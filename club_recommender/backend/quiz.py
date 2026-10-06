@@ -3,7 +3,7 @@ from typing import Any
 
 QUESTIONS = {
     "categories": {
-        "question": "What kinds of clubs are you interested in?",
+        "question": "What kinds of clubs are you interested in? (Select all that apply)",
         "type": "multi",
         "options": [
             ("music", "Music & Singing"), ("dance", "Dance & Movement"),
@@ -109,7 +109,7 @@ QUESTIONS = {
         ],
     },
     "cultural": {
-        "question": "What communities or cultures would you like to explore?",
+        "question": "What communities/cultures would you like to explore? (Select all that apply)",
         "type": "multi",
         "options": [
             ("east_asian", "East Asian"), ("south_asian", "South Asian"),
@@ -164,7 +164,7 @@ QUESTIONS = {
         ],
     },
     "vibe": {
-        "question": "What kind of club experience are you looking for?",
+        "question": "What kind of club experience are you looking for? (Select up to 3)",
         "type": "multi",
         "max_selections": 3,
         "options": [
@@ -175,7 +175,7 @@ QUESTIONS = {
         ],
     },
     "goals": {
-        "question": "What are you hoping to get out of a club?",
+        "question": "What are you hoping to get out of a club? (Select all that apply)",
         "type": "multi",
         "options": [
             ("meet_people", "Meet new people"), ("learn", "Learn a skill"),
@@ -219,7 +219,7 @@ QUESTIONS = {
         ],
     },
     "days": {
-        "question": "When are you generally available?",
+        "question": "When are you generally available? (Select all that apply)",
         "type": "multi",
         "options": [
             ("monday", "Monday"), ("tuesday", "Tuesday"), ("wednesday", "Wednesday"),
@@ -252,9 +252,8 @@ def next_questions(answers: dict[str, Any]) -> list[str]:
         key = CATEGORY_TO_KEY.get(category, category)
         if key in QUESTIONS:
             result.append(key)
-    result.extend(["vibe", "goals", "time", "beginner", "requirements", "size", "days", "free_text"])
-    # De-duplicate while preserving order and cap adaptive quiz length.
-    return list(dict.fromkeys(result))[:12]
+    result.extend(["vibe", "time", "beginner", "requirements", "size", "days", "goals", "free_text"])
+    return list(dict.fromkeys(result))
 
 def get_question(question_id: str) -> dict[str, Any]:
     q = QUESTIONS[question_id]

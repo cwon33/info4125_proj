@@ -57,6 +57,9 @@ async function submitAnswer(){
   } else {
     const checked = [...document.querySelectorAll('input[name="answer"]:checked')].map(x=>x.value);
     if(!checked.length){alert("Please select an option.");return;}
+    if(question.max_selections && checked.length > question.max_selections){
+      alert(`Please select no more than ${question.max_selections} options.`);return;
+    }
     value = question.type === "single" ? checked[0] : checked;
   }
   answers[question.id] = value;
