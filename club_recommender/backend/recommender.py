@@ -4,6 +4,12 @@ from typing import Any
 import pandas as pd
 
 VIBES = ["social", "competitive", "creative", "relaxed", "physical", "intellectual", "performance", "service"]
+SCORE_WEIGHTS = {
+    "interest": 0.40,
+    "vibe": 0.30,
+    "logistics": 0.15,
+    "commitment": 0.15,
+}
 
 def split_values(x: Any) -> set[str]:
     if x is None or (isinstance(x, float) and pd.isna(x)):
@@ -106,11 +112,20 @@ def recommend(profile: dict, df: pd.DataFrame, top_n: int = 10) -> list[dict]:
             "commitment": commitment_score(profile, row),
         }
 
-        score = (
-            0.40 * parts["interest"]
-            + 0.30 * parts["vibe"]
-            + 0.15 * parts["logistics"]
-            + 0.15 * parts["commitment"]
+        contributions = {
+            name: value * SCORE_WEIGHTS[name]
+            for name, value in parts.items()
+        }
+        score = sum(contributions.values())
+
+        breakdown = " ".join(
+            f"{name}={parts[name]:.3f} x {SCORE_WEIGHTS[name]:.2f}"
+            f" = {contributions[name]:.3f}"
+            for name in SCORE_WEIGHTS
+        )
+        print(
+            f"[recommendation score] {row.get('club_name', '')}: "
+            f"{breakdown}; final={score:.4f} ({score * 100:.1f}%)"
         )
 
         results.append({
