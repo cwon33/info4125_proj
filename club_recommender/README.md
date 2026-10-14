@@ -6,13 +6,14 @@ A V1 adaptive quiz + explainable content-based club recommender.
 
 ```bash
 pip install -r requirements.txt
+cd club_recommender
 uvicorn backend.main:app --reload
 ```
 
-Then open `http://127.0.0.1:8000` in a browser.
+Then open `http://127.0.0.1:8001` in a browser.
 
 For the API docs:
-`http://127.0.0.1:8000/docs`
+`http://127.0.0.1:8001/docs`
 
 ## Data
 
@@ -60,30 +61,3 @@ If that CSV is missing, the app falls back to a small demo dataset.
 5. Results include explanations for why each club matched.
 
 The quiz and recommender are intentionally separate so the question flow can change without rewriting the ranking algorithm.
-
-## Deploy to Vercel
-
-The FastAPI app serves the frontend and API from the same domain. Vercel uses `index.py` as its Python entrypoint.
-
-### Deploy from this folder with the Vercel CLI
-
-1. Install Node.js if needed, then install and sign in to the Vercel CLI:
-
-	```bash
-	npm install --global vercel
-	vercel login
-	```
-
-2. From this project folder, run:
-
-	```bash
-	vercel
-	```
-
-	Follow the prompts to create a Vercel project. To publish the production site, run `vercel --prod`.
-
-3. Open the `https://...vercel.app` URL printed by the CLI. The quiz is at the root URL, and the API docs are at `/docs`.
-
-Alternatively, choose **Add New → Project** in the Vercel dashboard, import the repository, and set **Root Directory** to `club_recommender` before deploying. Each later push to the connected branch will redeploy the site.
-
-The supplied CSV is included in this project, so Vercel will load its club data after deployment.

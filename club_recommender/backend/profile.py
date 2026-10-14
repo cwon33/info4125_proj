@@ -65,14 +65,18 @@ def normalize_text(value: Any) -> str:
 def profile_from_answers(answers: dict[str, Any]) -> dict[str, Any]:
     interests = []
     categories = answers.get("categories", [])
-    for x in categories:
-        interests.append(CATEGORY_MAP.get(x, x))
-    for key in SUBCATEGORY_MAP:
-        if key in answers:
-            values = answers[key]
-            if not isinstance(values, list):
-                values = [values]
-            interests.extend(SUBCATEGORY_MAP.get(v, v) for v in values)
+    selected_categories = [CATEGORY_MAP.get(value, value) for value in categories]
+    interests.extend(selected_categories)
+
+    category_subcategories = {}
+    for category_id, category_name in CATEGORY_MAP.items():
+        values = answers.get(category_id, [])
+        if not isinstance(values, list):
+            values = [values]
+        subcategories = [SUBCATEGORY_MAP.get(value, value) for value in values]
+        if subcategories:
+            category_subcategories[category_name] = subcategories
+            interests.extend(subcategories)
 
     vibe = {x: 1.0 for x in answers.get("vibe", [])}
     goals = {x: 1.0 for x in answers.get("goals", [])}
@@ -84,6 +88,8 @@ def profile_from_answers(answers: dict[str, Any]) -> dict[str, Any]:
 
     return {
         "interests": list(dict.fromkeys(interests)),
+        "categories": selected_categories,
+        "category_subcategories": category_subcategories,
         "vibe": vibe,
         "goals": goals,
         "time_range": time_map.get(answers.get("time"), (0, 20)),

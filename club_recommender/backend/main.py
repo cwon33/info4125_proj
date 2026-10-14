@@ -9,7 +9,7 @@ from fastapi.responses import FileResponse
 
 from .quiz import get_question, next_questions, QUESTIONS
 from .profile import profile_from_answers
-from .recommender import recommend
+from .recommender import recommend, SCORE_WEIGHTS
 
 ROOT = Path(__file__).resolve().parent.parent
 DATA = ROOT / "UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv"
@@ -59,8 +59,32 @@ def quiz_next(req: AnswersRequest):
 
 @app.post("/recommend")
 def get_recommendations(req: AnswersRequest):
+    answers_for_log = dict(req.answers)
+    if "free_text" in answers_for_log:
+        free_text = str(answers_for_log["free_text"])
+        answers_for_log["free_text"] = f"<redacted; {len(free_text)} characters>"
+    print("\n=== Quiz recommendation debug ===")
+    print(f"Submitted answers: {answers_for_log}")
+
     profile = profile_from_answers(req.answers)
+    print("Normalized profile:")
+    for name, value in profile.items():
+        if name != "free_text":
+            print(f"  {name}: {value}")
+    print(
+        "Score formula: "
+        + " + ".join(f"{weight:.2f} * {name}" for name, weight in SCORE_WEIGHTS.items())
+    )
+
     results = recommend(profile, CLUBS, max(1, min(req.top_n, 50)))
+    print(f"Final ranked recommendations (top {len(results)}):")
+    for rank, result in enumerate(results, start=1):
+        print(
+            f"  {rank}. {result['club_name']}: "
+            f"score={result['score']:.4f} ({result['match_percent']:.1f}%), "
+            f"reasons={result['reasons']}"
+        )
+    print("=== End recommendation debug ===\n")
     return {"profile": profile, "recommendations": results}
 
 @app.get("/clubs")

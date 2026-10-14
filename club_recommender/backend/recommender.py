@@ -69,6 +69,24 @@ def commitment_score(profile: dict, row: pd.Series) -> float:
     return 0.0
 
 def hard_filter(profile: dict, row: pd.Series) -> bool:
+    selected_categories = {
+        str(category).strip().casefold()
+        for category in profile.get("categories", [])
+    }
+    club_category = str(row.get("category", "")).strip().casefold()
+    if selected_categories and club_category not in selected_categories:
+        return False
+
+    selected_subcategories = profile.get("category_subcategories", {}).get(
+        row.get("category", ""), []
+    )
+    club_subcategory = str(row.get("subcategory", "")).strip().casefold()
+    if selected_subcategories and club_subcategory not in {
+        str(subcategory).strip().casefold()
+        for subcategory in selected_subcategories
+    }:
+        return False
+
     req = profile["requirements"]
     if req == "avoid" and (truthy(row.get("audition_required")) or truthy(row.get("application_required"))):
         return False
@@ -140,4 +158,30 @@ def recommend(profile: dict, df: pd.DataFrame, top_n: int = 10) -> list[dict]:
         })
 
     results.sort(key=lambda x: x["score"], reverse=True)
-    return results[:top_n]
+
+    selected_categories = profile.get("categories", [])
+    if not selected_categories:
+        return results[:top_n]
+
+    category_results = {}
+    for result in results:
+        category = str(result["category"]).strip().casefold()
+        category_results.setdefault(category, []).append(result)
+
+    balanced_results = []
+    normalized_categories = [
+        str(category).strip().casefold() for category in selected_categories
+    ]
+    while len(balanced_results) < top_n:
+        added_result = False
+        for category in normalized_categories:
+            available = category_results.get(category, [])
+            if available:
+                balanced_results.append(available.pop(0))
+                added_result = True
+                if len(balanced_results) == top_n:
+                    break
+        if not added_result:
+            break
+
+    return balanced_results
