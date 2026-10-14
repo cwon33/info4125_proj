@@ -1,26 +1,26 @@
 # Cornell Club Recommender
 
-A V1 adaptive quiz + explainable content-based club recommender.
+An adaptive quiz + explainable content-based club recommender.
 
 ## Run
 
 ```bash
-pip install -r requirements.txt
 cd club_recommender
+pip install -r requirements.txt
 uvicorn backend.main:app --reload
 ```
 
-Then open `http://127.0.0.1:8001` in a browser.
+Then open `http://127.0.0.1:8000` in a browser.
 
 For the API docs:
-`http://127.0.0.1:8001/docs`
+`http://127.0.0.1:8000/docs`
 
 ## Data
 
-The recommender loads the supplied club database from the project root:
+The recommender loads the supplied club database from `data/`:
 
 ```text
-UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv
+data/UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv
 ```
 
 The recommender supports the fields from the club schema discussed in the project:
