@@ -1,9 +1,11 @@
+<!-- Single-page browser client served by backend.main at the site's root URL. -->
 <!doctype html>
 <html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>Cornell Club Recommender</title>
+<!-- Layout and visual styles for the quiz and recommendation cards. -->
 <style>
 body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;background:#fafafa;color:#222}
 .card{background:white;border:1px solid #ddd;border-radius:14px;padding:28px;margin-top:20px}
@@ -21,19 +23,23 @@ textarea{width:100%;min-height:130px;box-sizing:border-box}
 <div class="muted" id="progress"></div>
 <div id="app" class="card"></div>
 
+<!-- Quiz state, API calls, and rendering for each question and result. -->
 <script>
 const API = "";
+// Keep the current answers and question flow in the browser during the quiz.
 let answers = {};
 let question = null;
 let asked = [];
 
 async function start(){
+  // Ask the API for the opening category question.
   const r = await fetch(API+"/quiz/start");
   const d = await r.json();
   question = d.question;
   render();
 }
 function render(){
+  // Build controls from the question schema returned by the backend.
   const el = document.getElementById("app");
   if(!question){return;}
   document.getElementById("progress").textContent =
@@ -51,6 +57,7 @@ function render(){
   el.innerHTML = html;
 }
 async function submitAnswer(){
+  // Validate selections, save the response, and request the next question.
   let value;
   if(question.type === "text"){
     value = document.getElementById("textAnswer").value;
@@ -75,6 +82,7 @@ async function submitAnswer(){
   render();
 }
 async function showResults(){
+  // Submit all answers once the question graph is complete and render matches.
   document.getElementById("progress").textContent = "Your recommendations";
   const r = await fetch(API+"/recommend", {
     method:"POST",headers:{"Content-Type":"application/json"},

@@ -1,63 +1,38 @@
 # Cornell Club Recommender
 
-An adaptive quiz + explainable content-based club recommender.
+An adaptive quiz and explainable content based recommender for Cornell clubs.
 
-## Run
+## Run locally
+
+Run these commands from this directory:
 
 ```bash
-cd club_recommender
 pip install -r requirements.txt
+cd club_recommender
 uvicorn backend.main:app --reload
 ```
 
-Then open `http://127.0.0.1:8000` in a browser.
+Open <http://127.0.0.1:8000> for the quiz or <http://127.0.0.1:8000/docs> for the API documentation (not required to open).
 
-For the API docs:
-`http://127.0.0.1:8000/docs`
+The CSV at `data/UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv` is required. The server reads it at startup and exits with a file error if its missing. Keep this file where it is currently when running the app.
 
-## Data
+## How it works
 
-The recommender loads the supplied club database from `data/`:
+1. `backend/quiz.py` defines questions and chooses follow-up questions based on selected categories.
+2. `backend/profile.py` translates answer IDs to the category and subcategory labels used by the club data.
+3. `backend/recommender.py` filters incompatible clubs, scores interests, vibe, logistics, and time commitment, then adds match explanations.
+4. `backend/main.py` loads the CSV, provides the API routes, and serves `frontend/index.html`.
 
-```text
-data/UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv
-```
 
-The recommender supports the fields from the club schema discussed in the project:
+See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data schema and also end-to-end workflow walkthrough.
 
-- category
-- subcategory
-- summary
-- description
-- typical_meeting
-- interest_tags
-- skills_gained
-- vibe_tags
-- vibe_social
-- vibe_competitive
-- vibe_creative
-- vibe_relaxed
-- vibe_physical
-- vibe_intellectual
-- vibe_performance
-- vibe_service
-- commitment_level
-- hours_per_week_min
-- hours_per_week_max
-- beginner_friendly
-- audition_required
-- application_required
-- meeting_days
-- and related metadata
+## Project files
 
-If that CSV is missing, the app falls back to a small demo dataset.
-
-## Architecture
-
-1. `quiz.py` defines the adaptive question graph.
-2. `profile.py` converts answers into a normalized user profile.
-3. `recommender.py` scores every club.
-4. Hard constraints remove clearly incompatible clubs.
-5. Results include explanations for why each club matched.
-
-The quiz and recommender are intentionally separate so the question flow can change without rewriting the ranking algorithm.
+- `backend/main.py`: FastAPI entry point and API routes.
+- `backend/quiz.py`: quiz question catalog and adaptive flow.
+- `backend/profile.py`: answer-to-profile conversion.
+- `backend/recommender.py`: eligibility filters, ranking, and explanations.
+- `backend/__init__.py`: marks the backend as an importable Python package.
+- `frontend/index.html`: browser UI served by the API.
+- `data/UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv`: required source club database.
+- `requirements.txt`: Python dependencies.

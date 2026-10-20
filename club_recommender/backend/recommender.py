@@ -1,3 +1,4 @@
+"""Content-based scoring, hard filters, and human-readable match explanations."""
 
 import re
 from typing import Any
@@ -12,25 +13,30 @@ SCORE_WEIGHTS = {
 }
 
 def split_values(x: Any) -> set[str]:
+    # Split list-like CSV fields into normalized tokens.
     if x is None or (isinstance(x, float) and pd.isna(x)):
         return set()
     return {v.strip().lower() for v in re.split(r"[,;|]", str(x)) if v.strip()}
 
 def truthy(x: Any) -> bool:
+    # Interpret common CSV representations of true as a boolean.
     return str(x).strip().lower() in {"true", "1", "yes", "y"}
 
 def num(x: Any, default=0.0) -> float:
+    # Convert a value to float, returning a safe default for bad/missing data.
     try:
         return float(x)
     except Exception:
         return default
 
 def club_text(row: pd.Series) -> str:
+    # Combine descriptive fields for simple interest substring matching.
     fields = ["club_name", "category", "subcategory", "summary", "description",
               "interest_tags", "skills_gained", "good_for", "match_text", "vibe_tags"]
     return " ".join(str(row.get(f, "")) for f in fields).lower()
 
 def interest_score(profile: dict, row: pd.Series) -> float:
+    # Score how many selected interests appear in the club's descriptive text.
     interests = [x.lower() for x in profile["interests"]]
     if not interests:
         return 0.0
@@ -39,6 +45,7 @@ def interest_score(profile: dict, row: pd.Series) -> float:
     return min(1.0, hits / max(1, min(len(interests), 4)))
 
 def vibe_score(profile: dict, row: pd.Series) -> float:
+    # Compare requested vibe dimensions with numeric values or fallback tags.
     requested = profile["vibe"]
     if not requested:
         return 0.0
@@ -49,6 +56,7 @@ def vibe_score(profile: dict, row: pd.Series) -> float:
     return sum(min(1, vals.get(v, 0)) for v in requested) / len(requested)
 
 def logistics_score(profile: dict, row: pd.Series) -> float:
+    # Score selected meeting days and preferred club size.
     score = 0.0
     checks = 0
     if profile["days"]:
@@ -61,6 +69,7 @@ def logistics_score(profile: dict, row: pd.Series) -> float:
     return score / checks if checks else 0.5
 
 def commitment_score(profile: dict, row: pd.Series) -> float:
+    # Give full credit when weekly time ranges overlap.
     low, high = profile["time_range"]
     club_low = num(row.get("hours_per_week_min"), 0)
     club_high = num(row.get("hours_per_week_max"), club_low)
@@ -69,6 +78,7 @@ def commitment_score(profile: dict, row: pd.Series) -> float:
     return 0.0
 
 def hard_filter(profile: dict, row: pd.Series) -> bool:
+    # Exclude clubs outside chosen categories or hard eligibility preferences.
     selected_categories = {
         str(category).strip().casefold()
         for category in profile.get("categories", [])
@@ -98,6 +108,7 @@ def hard_filter(profile: dict, row: pd.Series) -> bool:
     return True
 
 def explanations(profile: dict, row: pd.Series, parts: dict) -> list[str]:
+    # Turn strong score components and goals into concise match reasons.
     reasons = []
     if parts["interest"] >= 0.5:
         reasons.append("matches your interests")
@@ -118,6 +129,7 @@ def explanations(profile: dict, row: pd.Series, parts: dict) -> list[str]:
     return reasons[:4] or ["broad match with your preferences"]
 
 def recommend(profile: dict, df: pd.DataFrame, top_n: int = 10) -> list[dict]:
+    # Score eligible clubs, balance selected categories, and return top results.
     results = []
     for _, row in df.iterrows():
         if not hard_filter(profile, row):

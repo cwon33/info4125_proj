@@ -1,4 +1,6 @@
 
+"""Question definitions and adaptive question selection for the web quiz."""
+
 from typing import Any
 
 QUESTIONS = {
@@ -246,6 +248,7 @@ CATEGORY_TO_KEY = {
 }
 
 def next_questions(answers: dict[str, Any]) -> list[str]:
+    # Return detail questions for selected categories, then shared preferences.
     selected = answers.get("categories", [])
     result = []
     for category in selected:
@@ -256,6 +259,7 @@ def next_questions(answers: dict[str, Any]) -> list[str]:
     return list(dict.fromkeys(result))
 
 def get_question(question_id: str) -> dict[str, Any]:
+    # Serialize one internal question definition for the frontend API.
     q = QUESTIONS[question_id]
     return {
         "id": question_id,

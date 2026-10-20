@@ -1,5 +1,6 @@
 
-from collections import defaultdict
+"""Translate raw quiz selections into the normalized profile used for ranking."""
+
 from typing import Any
 
 CATEGORY_MAP = {
@@ -57,12 +58,8 @@ SUBCATEGORY_MAP = {
     "policy_research": "Policy Research & Discussion",
 }
 
-def normalize_text(value: Any) -> str:
-    if value is None:
-        return ""
-    return str(value).replace("|", ",").replace(";", ",").lower()
-
 def profile_from_answers(answers: dict[str, Any]) -> dict[str, Any]:
+    # Map quiz IDs to dataset labels and collect preference constraints.
     interests = []
     categories = answers.get("categories", [])
     selected_categories = [CATEGORY_MAP.get(value, value) for value in categories]
