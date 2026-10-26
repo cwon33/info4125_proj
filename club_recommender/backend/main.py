@@ -8,6 +8,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel, Field
 from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
+
 
 from .quiz import get_question, next_questions
 from .profile import profile_from_answers
@@ -23,6 +25,7 @@ def load_clubs():
 CLUBS = load_clubs()
 
 app = FastAPI(title="Cornell Club Recommender API", version="1.0.0")
+app.mount("/assets", StaticFiles(directory=ROOT / "frontend"), name="assets")
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
