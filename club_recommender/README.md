@@ -2,6 +2,8 @@
 
 An adaptive quiz and explainable content based recommender for Cornell clubs.
 
+[Deployed Site](https://cornell-clubquest.onrender.com/)
+
 ## Run locally
 
 Run these commands from this directory:
@@ -22,7 +24,6 @@ The CSV at `data/UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv` is require
 2. `backend/profile.py` translates answer IDs to the category and subcategory labels used by the club data.
 3. `backend/recommender.py` filters incompatible clubs, scores interests, vibe, logistics, and time commitment, then adds match explanations.
 4. `backend/main.py` loads the CSV, provides the API routes, and serves `frontend/index.html`.
-
 
 See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data schema and also end-to-end workflow walkthrough.
 
