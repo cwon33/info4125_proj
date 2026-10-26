@@ -1,105 +1,49 @@
-<!-- Single-page browser client served by backend.main at the site's root URL. -->
 <!doctype html>
-<html>
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Cornell Club Recommender</title>
-<!-- Layout and visual styles for the quiz and recommendation cards. -->
-<style>
-body{font-family:system-ui,sans-serif;max-width:760px;margin:40px auto;padding:0 20px;background:#fafafa;color:#222}
-.card{background:white;border:1px solid #ddd;border-radius:14px;padding:28px;margin-top:20px}
-h1{margin-bottom:4px}.muted{color:#666}
-.option{display:block;padding:12px;margin:8px 0;border:1px solid #ddd;border-radius:10px;cursor:pointer}
-.option:hover{background:#f5f5f5}
-button{margin-top:18px;padding:11px 18px;border:0;border-radius:9px;background:#222;color:#fff;cursor:pointer}
-.result{border:1px solid #ddd;border-radius:12px;padding:18px;margin:12px 0;background:#fff}
-.score{font-weight:700}.reason{display:inline-block;background:#f0f0f0;border-radius:999px;padding:5px 9px;margin:4px 4px 0 0;font-size:13px}
-textarea{width:100%;min-height:130px;box-sizing:border-box}
-</style>
-</head>
-<body>
-<h1>Find your Cornell clubs</h1>
-<div class="muted" id="progress"></div>
-<div id="app" class="card"></div>
-
-<!-- Quiz state, API calls, and rendering for each question and result. -->
-<script>
-const API = "";
-// Keep the current answers and question flow in the browser during the quiz.
-let answers = {};
-let question = null;
-let asked = [];
-
-async function start(){
-  // Ask the API for the opening category question.
-  const r = await fetch(API+"/quiz/start");
-  const d = await r.json();
-  question = d.question;
-  render();
-}
-function render(){
-  // Build controls from the question schema returned by the backend.
-  const el = document.getElementById("app");
-  if(!question){return;}
-  document.getElementById("progress").textContent =
-    "Question " + (asked.length + 1);
-  let html = `<h2>${question.question}</h2>`;
-  if(question.type === "text"){
-    html += `<textarea id="textAnswer" placeholder="Tell us what you're looking for..."></textarea>`;
-  } else {
-    html += question.options.map(o =>
-      `<label class="option"><input type="${question.type==='single'?'radio':'checkbox'}"
-        name="answer" value="${o.id}"> ${o.label}</label>`
-    ).join("");
-  }
-  html += `<button onclick="submitAnswer()">Continue</button>`;
-  el.innerHTML = html;
-}
-async function submitAnswer(){
-  // Validate selections, save the response, and request the next question.
-  let value;
-  if(question.type === "text"){
-    value = document.getElementById("textAnswer").value;
-  } else {
-    const checked = [...document.querySelectorAll('input[name="answer"]:checked')].map(x=>x.value);
-    if(!checked.length){alert("Please select an option.");return;}
-    if(question.max_selections && checked.length > question.max_selections){
-      alert(`Please select no more than ${question.max_selections} options.`);return;
-    }
-    value = question.type === "single" ? checked[0] : checked;
-  }
-  answers[question.id] = value;
-  asked.push(question.id);
-
-  const r = await fetch(API+"/quiz/next", {
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({answers})
-  });
-  const d = await r.json();
-  if(!d.question){return showResults();}
-  question = d.question;
-  render();
-}
-async function showResults(){
-  // Submit all answers once the question graph is complete and render matches.
-  document.getElementById("progress").textContent = "Your recommendations";
-  const r = await fetch(API+"/recommend", {
-    method:"POST",headers:{"Content-Type":"application/json"},
-    body:JSON.stringify({answers,top_n:10})
-  });
-  const d = await r.json();
-  document.getElementById("app").innerHTML =
-    `<h2>Clubs you might like</h2>` +
-    d.recommendations.map((x,i)=>`
-      <div class="result">
-        <h3>${i+1}. ${x.club_name}</h3>
-        <div class="score">${x.match_percent}% match</div>
-        <p>${x.summary}</p>
-        ${x.reasons.map(r=>`<span class="reason">${r}</span>`).join("")}
-      </div>`).join("");
-}
-start();
-</script>
-</body>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <meta name="theme-color" content="#8d242a" />
+    <meta
+      name="description"
+      content="Find a little more of your people at Cornell. Explore clubs and get recommendations around your interests, time, and kind of community."
+    />
+    <title>ClubQuest — Find your people at Cornell</title>
+    <link rel="stylesheet" href="/assets/styles.css" />
+    <script src="/assets/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+    <header class="site-header">
+      <div class="header-inner">
+        <a href="#home" class="brand" aria-label="ClubQuest home"
+          ><span class="brand-mark" aria-hidden="true">c<span>✳</span></span
+          ><span>clubquest<span class="brand-campus">AT CORNELL</span></span></a
+        >
+        <nav aria-label="Main navigation">
+          <a href="#explore" data-nav="explore">Explore clubs</a
+          ><a href="#saved" data-nav="saved"
+            >Saved <span class="saved-count" id="saved-count">0</span></a
+          ><a href="#quiz" class="nav-cta" data-nav="quiz"
+            >Find my clubs <span aria-hidden="true">↗</span></a
+          >
+        </nav>
+      </div>
+    </header>
+    <main id="main" tabindex="-1"></main>
+    <footer class="site-footer">
+      <a href="#home" class="footer-wordmark">clubquest<span>✳</span></a>
+      <p>A student project. A few more ways to belong.</p>
+      <span>Made for Cornell students · Independently built</span>
+    </footer>
+    <div id="toast" class="toast" role="status" aria-live="polite"></div>
+    <dialog id="club-dialog" aria-labelledby="dialog-title">
+      <div id="dialog-content"></div>
+    </dialog>
+    <noscript
+      ><p class="noscript">
+        Please enable JavaScript to explore clubs and take the quiz.
+      </p></noscript
+    >
+  </body>
 </html>
