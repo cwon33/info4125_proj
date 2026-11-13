@@ -1,39 +1,70 @@
-# Cornell Club Recommender
+# ClubQuest Application API Reference
 
-An adaptive quiz and explainable content based recommender for Cornell clubs.
+This document describes the API served by `backend/main.py`. For installation, running the app, features, scoring, data requirements, and deployment, use the [root README](../README.md).
 
-[Deployed Site](https://cornell-clubquest.onrender.com/)
+- [Local setup](../README.md#run-locally)
+- [Integration test instructions and coverage](../README.md#run-the-integration-tests)
+- [Recommendation workflow and scoring](../README.md#how-it-works)
+- [Required dataset](../README.md#required-dataset)
+- [Deployment settings](../README.md#deployment)
 
-## Run locally
+## API routes
 
-Run these commands from this directory:
+All routes are relative to the app's origin. The frontend calls these routes on the same origin.
 
-```bash
-pip install -r requirements.txt
-cd club_recommender
-uvicorn backend.main:app --reload
+| Method | Route         | Purpose                                                                    |
+| ------ | ------------- | -------------------------------------------------------------------------- |
+| GET    | `/`           | Serve the frontend homepage.                                               |
+| GET    | `/assets/...` | Serve files from the frontend folder, including JavaScript and CSS.        |
+| GET    | `/quiz/start` | Return the opening category question.                                      |
+| POST   | `/quiz/next`  | Return the next question and remaining question IDs for submitted answers. |
+| POST   | `/recommend`  | Build a profile and return club recommendations.                           |
+| GET    | `/clubs`      | Return the loaded club dataset as a JSON array.                            |
+| GET    | `/health`     | Return service status, loaded club count, and dataset path.                |
+| GET    | `/docs`       | Display interactive API documentation.                                     |
+
+## Quiz requests and responses
+
+`GET /quiz/start` returns an object with a `question` field. Each question includes `id`, `question`, `type`, `max_selections`, and `options`; each option has an `id` and a `label`.
+
+Send answers to `POST /quiz/next` as JSON, using question IDs as keys and option IDs as values. Multiple-choice answers use arrays; single-choice and text answers use strings.
+
+```json
+{
+  "answers": {
+    "categories": ["music"]
+  }
+}
 ```
 
-Open <http://127.0.0.1:8000> for the quiz or <http://127.0.0.1:8000/docs> for the API documentation (not required to open).
+The response contains:
 
-The CSV at `data/UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv` is required. The server reads it at startup and exits with a file error if its missing. Keep this file where it is currently when running the app.
+- `question`: the next question object, or `null` when the quiz is complete.
+- `remaining`: unanswered question IDs in their planned order.
 
-## How it works
+## Recommendation requests and responses
 
-1. `backend/quiz.py` defines questions and chooses follow-up questions based on selected categories.
-2. `backend/profile.py` translates answer IDs to the category and subcategory labels used by the club data.
-3. `backend/recommender.py` filters incompatible clubs, scores interests, vibe, logistics, and time commitment, then adds match explanations.
-4. `backend/main.py` loads the CSV, provides the API routes, and serves `frontend/index.html`.
+Send an `answers` object to `POST /recommend`, with an optional `top_n`. This minimal example omits the additional preferences normally collected by the browser quiz:
 
-See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) for the data schema and also end-to-end workflow walkthrough.
+```json
+{
+  "answers": {
+    "categories": ["music"],
+    "music": ["a_cappella"],
+    "time": "flexible"
+  },
+  "top_n": 12
+}
+```
 
-## Project files
+`top_n` defaults to 10 and is clamped to 1–50. Fewer clubs may be returned if fewer meet the filters.
 
-- `backend/main.py`: FastAPI entry point and API routes.
-- `backend/quiz.py`: quiz question catalog and adaptive flow.
-- `backend/profile.py`: answer-to-profile conversion.
-- `backend/recommender.py`: eligibility filters, ranking, and explanations.
-- `backend/__init__.py`: marks the backend as an importable Python package.
-- `frontend/index.html`: browser UI served by the API.
-- `data/UPDATED_cornell_clubs_rich_dataset.xlsx - Clubs.csv`: required source club database.
-- `requirements.txt`: Python dependencies.
+The response contains the normalized `profile` and a `recommendations` array. Each recommendation includes:
+
+- `club_id`, `club_name`, `category`, and `subcategory`.
+- `summary`: the club's short description.
+- `score`: the weighted compatibility score on a 0–1 scale.
+- `match_percent`: the score expressed on a 0–100 scale.
+- `reasons`: human-readable match explanations.
+
+For the CSV schema and algorithm walkthrough, see [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
